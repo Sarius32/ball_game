@@ -6,9 +6,16 @@ def random_color() -> str:
     return "#%02x%02x%02x" % (randint(0, 255), randint(0, 255), randint(0, 255))
 
 
-def intersects(ball_position: tuple[float, float], rectangle_position: tuple[int, int], ball_radius: int = 5, rectangle_size: int = CUBE_SIZE) -> bool:
-    distance_x = abs(ball_position[0] - rectangle_position[0])
-    distance_y = abs(ball_position[1] - rectangle_position[1])
+def get_color_int(color: str) -> int:
+    if color == "red":
+        return 0
+    if color == "green":
+        return 1
+    if color == "blue":
+        return 2
+    if color == "yellow":
+        return 3
+    return -1
 
     if (distance_x > (rectangle_size/2 + ball_radius)):
         return False
