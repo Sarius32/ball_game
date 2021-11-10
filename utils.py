@@ -44,3 +44,7 @@ def ball_out_of_bounds(ball) -> bool:
         return True
     
     return False
+
+
+def get_random(chance: int) -> bool:
+    return randint(0, chance) < 1

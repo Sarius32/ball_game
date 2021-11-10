@@ -5,7 +5,7 @@ from ball import Ball
 
 from consts import OFFSET, SQUARE_SIZE, HEIGHT, INTERVAL, SQUARES_PER_PLAYER, WIDTH
 from square import Square
-from utils import ball_out_of_bounds, intersects
+from utils import ball_out_of_bounds, get_random, intersects
 
 
 class Ball_Game:
@@ -46,45 +46,51 @@ class Ball_Game:
 
         self.init_rects()
 
-
         self.animate()
         mainloop()
 
 
-    def init_rects(self):
+    def init_rects(self) -> None:
         self.squares.extend([Square((OFFSET + SQUARE_SIZE/2 + x*SQUARE_SIZE                                 , OFFSET + SQUARE_SIZE/2 + y*SQUARE_SIZE                                 ), "red", self.canvas)    for x in range(SQUARES_PER_PLAYER) for y in range (SQUARES_PER_PLAYER)])
         self.squares.extend([Square((OFFSET + SQUARE_SIZE/2 + x*SQUARE_SIZE + SQUARES_PER_PLAYER*SQUARE_SIZE, OFFSET + SQUARE_SIZE/2 + y*SQUARE_SIZE                                 ), "yellow", self.canvas) for x in range(SQUARES_PER_PLAYER) for y in range (SQUARES_PER_PLAYER)])
         self.squares.extend([Square((OFFSET + SQUARE_SIZE/2 + x*SQUARE_SIZE                                 , OFFSET + SQUARE_SIZE/2 + y*SQUARE_SIZE + SQUARES_PER_PLAYER*SQUARE_SIZE), "blue", self.canvas)   for x in range(SQUARES_PER_PLAYER) for y in range (SQUARES_PER_PLAYER)])
         self.squares.extend([Square((OFFSET + SQUARE_SIZE/2 + x*SQUARE_SIZE + SQUARES_PER_PLAYER*SQUARE_SIZE, OFFSET + SQUARE_SIZE/2 + y*SQUARE_SIZE + SQUARES_PER_PLAYER*SQUARE_SIZE), "green", self.canvas)  for x in range(SQUARES_PER_PLAYER) for y in range (SQUARES_PER_PLAYER)])
 
 
-    def shoot_ball(self, origin: tuple[int, int], direction_range: tuple[tuple[int, int]], color: str):
+    def add_to_ball_reservoir(self) -> None:
+        self.red_remaining += 1
+        self.yellow_remaining += 1
+        self.blue_remaining += 1
+        self.green_remaining += 1
+
+
+    def shoot_ball(self, origin: tuple[int, int], direction_range: tuple[tuple[int, int]], color: str) -> None:
         dir_x = random.uniform(direction_range[0][0], direction_range[1][0])
         dir_y = random.uniform(direction_range[0][1], direction_range[1][1])
         self.balls.append(Ball(origin, (dir_x, dir_y), color, self.canvas))
 
+    def shoot_balls(self) -> None:
+        if get_random(25) and self.red_remaining > 0:
+            self.shoot_ball(self.red_origin, self.red_range, "red")
+            self.red_remaining -= 1
+        if get_random(25) and self.yellow_remaining > 0:
+            self.shoot_ball(self.yellow_origin, self.yellow_range, "yellow")
+            self.yellow_remaining -= 1
+        if get_random(25) and self.blue_remaining > 0:
+            self.shoot_ball(self.blue_origin, self.blue_range, "blue")
+            self.blue_remaining -= 1
+        if get_random(25) and self.green_remaining > 0:
+            self.shoot_ball(self.green_origin, self.green_range, "green")
+            self.green_remaining -= 1
 
-    def animate(self):
+
+    def animate(self) -> None:
         self.t += INTERVAL
         if self.t >= 1:
             self.t = 0
-            self.red_remaining += 1
-            self.yellow_remaining += 1
-            self.blue_remaining += 1
-            self.green_remaining += 1
+            self.add_to_ball_reservoir()
 
-        if bool(random.getrandbits(1)) and bool(random.getrandbits(1)) and self.red_remaining > 0:
-            self.shoot_ball(self.red_origin, self.red_range, "red")
-            self.red_remaining -= 1
-        if bool(random.getrandbits(1)) and bool(random.getrandbits(1)) and self.yellow_remaining > 0:
-            self.shoot_ball(self.yellow_origin, self.yellow_range, "yellow")
-            self.yellow_remaining -= 1
-        if bool(random.getrandbits(1)) and bool(random.getrandbits(1)) and self.blue_remaining > 0:
-            self.shoot_ball(self.blue_origin, self.blue_range, "blue")
-            self.blue_remaining -= 1
-        if bool(random.getrandbits(1)) and bool(random.getrandbits(1)) and self.green_remaining > 0:
-            self.shoot_ball(self.green_origin, self.green_range, "green")
-            self.green_remaining -= 1
+        self.shoot_balls()
 
         for ball in self.balls:
             if ball_out_of_bounds(ball):
