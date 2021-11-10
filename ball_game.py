@@ -3,9 +3,9 @@ import random
 from ball import Ball
 
 
-from consts import CUBE_SIZE, HEIGHT, INTERVAL, WIDTH
+from consts import OFFSET, SQUARE_SIZE, HEIGHT, INTERVAL, SQUARES_PER_PLAYER, WIDTH
 from square import Square
-from utils import intersects
+from utils import ball_out_of_bounds, intersects
 
 
 class Ball_Game:
@@ -18,16 +18,26 @@ class Ball_Game:
 
     squares: list[Square] = []
 
-    red_origin = (20, 20)
-    red_range = ((0, 1), (1, 0))
+    red_remaining = 0
+    red_origin = (OFFSET, OFFSET)
+    red_range = ((1, 0), (0, 1))
 
-    green_origin = (320, 320)
-    green_range = ((-1.0, 0), (0, -1.0))
+    yellow_remaining = 0
+    yellow_origin = (OFFSET + 2*SQUARES_PER_PLAYER*SQUARE_SIZE, OFFSET)
+    yellow_range = ((-1, 0), (0, 1))
+
+    blue_remaining = 0
+    blue_origin = (OFFSET, OFFSET + 2*SQUARES_PER_PLAYER*SQUARE_SIZE)
+    blue_range = ((1, 0), (0, -1))
+
+    green_remaining = 0
+    green_origin = (OFFSET + 2*SQUARES_PER_PLAYER*SQUARE_SIZE, OFFSET + 2*SQUARES_PER_PLAYER*SQUARE_SIZE)
+    green_range = ((-1, 0), (0, -1))
 
 
     def __init__(self) -> None:
         self.window = Tk()
-        self.window.title("Tkinter Animation Demo")
+        self.window.title("Ball Game")
         self.window.geometry(f'{WIDTH}x{HEIGHT}')
 
         self.canvas = Canvas(self.window)
@@ -42,10 +52,10 @@ class Ball_Game:
 
 
     def init_rects(self):
-        self.squares.extend([Square((x*CUBE_SIZE+ 20, y*CUBE_SIZE+ 20), "red", self.canvas) for x in range(10) for y in range (10)])
-        self.squares.extend([Square((x*CUBE_SIZE+170, y*CUBE_SIZE+ 20), "yellow", self.canvas) for x in range(10) for y in range (10)])
-        self.squares.extend([Square((x*CUBE_SIZE+ 20, y*CUBE_SIZE+170), "blue", self.canvas) for x in range(10) for y in range (10)])
-        self.squares.extend([Square((x*CUBE_SIZE+170, y*CUBE_SIZE+170), "green", self.canvas) for x in range(10) for y in range (10)])
+        self.squares.extend([Square((OFFSET + SQUARE_SIZE/2 + x*SQUARE_SIZE                                 , OFFSET + SQUARE_SIZE/2 + y*SQUARE_SIZE                                 ), "red", self.canvas)    for x in range(SQUARES_PER_PLAYER) for y in range (SQUARES_PER_PLAYER)])
+        self.squares.extend([Square((OFFSET + SQUARE_SIZE/2 + x*SQUARE_SIZE + SQUARES_PER_PLAYER*SQUARE_SIZE, OFFSET + SQUARE_SIZE/2 + y*SQUARE_SIZE                                 ), "yellow", self.canvas) for x in range(SQUARES_PER_PLAYER) for y in range (SQUARES_PER_PLAYER)])
+        self.squares.extend([Square((OFFSET + SQUARE_SIZE/2 + x*SQUARE_SIZE                                 , OFFSET + SQUARE_SIZE/2 + y*SQUARE_SIZE + SQUARES_PER_PLAYER*SQUARE_SIZE), "blue", self.canvas)   for x in range(SQUARES_PER_PLAYER) for y in range (SQUARES_PER_PLAYER)])
+        self.squares.extend([Square((OFFSET + SQUARE_SIZE/2 + x*SQUARE_SIZE + SQUARES_PER_PLAYER*SQUARE_SIZE, OFFSET + SQUARE_SIZE/2 + y*SQUARE_SIZE + SQUARES_PER_PLAYER*SQUARE_SIZE), "green", self.canvas)  for x in range(SQUARES_PER_PLAYER) for y in range (SQUARES_PER_PLAYER)])
 
 
     def shoot_ball(self, origin: tuple[int, int], direction_range: tuple[tuple[int, int]], color: str):
@@ -57,18 +67,37 @@ class Ball_Game:
     def animate(self):
         self.t += INTERVAL
         if self.t >= 1:
-            self.shoot_ball(self.red_origin, self.red_range, "red")
-            self.shoot_ball(self.green_origin, self.green_range, "green")
             self.t = 0
+            self.red_remaining += 1
+            self.yellow_remaining += 1
+            self.blue_remaining += 1
+            self.green_remaining += 1
+
+        if bool(random.getrandbits(1)) and bool(random.getrandbits(1)) and self.red_remaining > 0:
+            self.shoot_ball(self.red_origin, self.red_range, "red")
+            self.red_remaining -= 1
+        if bool(random.getrandbits(1)) and bool(random.getrandbits(1)) and self.yellow_remaining > 0:
+            self.shoot_ball(self.yellow_origin, self.yellow_range, "yellow")
+            self.yellow_remaining -= 1
+        if bool(random.getrandbits(1)) and bool(random.getrandbits(1)) and self.blue_remaining > 0:
+            self.shoot_ball(self.blue_origin, self.blue_range, "blue")
+            self.blue_remaining -= 1
+        if bool(random.getrandbits(1)) and bool(random.getrandbits(1)) and self.green_remaining > 0:
+            self.shoot_ball(self.green_origin, self.green_range, "green")
+            self.green_remaining -= 1
 
         for ball in self.balls:
+            if ball_out_of_bounds(ball):
+                self.balls.remove(ball)
+                break
             stop = False
             for square in self.squares:
-                if square.color is not ball.color and intersects(ball.position, square.position):
-                    square.changeColor(ball.color)
-                    self.balls.remove(ball)
-                    stop = True
-                    break
+                if square.color_int is not ball.color_int:
+                    if intersects(ball.center, square.center):
+                        square.changeColor(ball.color)
+                        self.balls.remove(ball)
+                        stop = True
+                        break
 
             if not stop:
                 ball.update()
