@@ -2,7 +2,7 @@ from typing import Any
 from tkinter import Tk, Canvas, mainloop
 
 import numpy as np
-from consts import CIRCLE_SIZE
+from consts import BALL_SPEED, CIRCLE_SIZE
 from utils import get_color_int
 
 class Ball:
@@ -34,7 +34,7 @@ class Ball:
         self.redraw()
         
     def update_position(self) -> None:
-        self.center += self.direction / np.linalg.norm(self.direction) * 2
+        self.center += self.direction / np.linalg.norm(self.direction) * BALL_SPEED
     def redraw(self) -> None:
         self.canvas.coords(self.draw_obj, self.center[0]-self.radius, self.center[1]-self.radius, self.center[0]+self.radius, self.center[1]+self.radius)
 
